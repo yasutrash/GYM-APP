@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#111111">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="IronLog">
+  <meta name="description" content="Track your gym sessions, volume and PRs">
+  <title>IronLog</title>
+  <link rel="manifest" id="manifest-placeholder">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; height: 100%; }
+    body { background: #f4f4f2; overscroll-behavior-y: none; height: 100%; font-family: 'Bebas Neue', sans-serif; color: #111; }
+    #app { height: 100%; }
+    input, button, select, textarea { -webkit-appearance: none; font-family: inherit; touch-action: manipulation; }
+    input[type="number"] { font-family: 'DM Mono', monospace; -moz-appearance: textfield; }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .app-shell { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+    .top-bar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 12px 16px 10px; padding-top: calc(12px + env(safe-area-inset-top, 0px)); position: sticky; top: 0; z-index: 50; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .page-content { flex: 1; padding: 16px 14px 100px; max-width: 600px; margin: 0 auto; width: 100%; overflow-y: auto; }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #e0e0e0; display: flex; z-index: 50; padding-bottom: env(safe-area-inset-bottom, 0px); box-shadow: 0 -1px 8px rgba(0,0,0,0.07); }
+    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 4px 4px; border: none; background: none; cursor: pointer; gap: 2px; min-height: 58px; -webkit-tap-highlight-color: transparent; }
+    .nav-icon { font-size: 1.3rem; line-height: 1; }
+    .nav-label { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 1px; color: #bbb; }
+    .nav-item.active .nav-label { color: #e05c00; }
+    .nav-dot { width: 4px; height: 4px; border-radius: 50%; background: #e05c00; margin-top: 2px; }
+
+    .card { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+    .btn-primary { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; cursor: pointer; border: none; border-radius: 10px; padding: 15px 20px; font-size: 1.1rem; background: #111; color: #fff; width: 100%; -webkit-tap-highlight-color: transparent; display: block; }
+    .btn-primary:disabled { opacity: 0.3; }
+    .btn-ghost { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; cursor: pointer; border: 1.5px solid #ccc; border-radius: 10px; padding: 12px 18px; font-size: 0.95rem; background: none; color: #555; -webkit-tap-highlight-color: transparent; }
+    .btn-del { font-family: 'Bebas Neue', sans-serif; letter-spacing: 1px; cursor: pointer; border: 1.5px solid #ffbbbb; background: none; color: #cc4444; font-size: 0.85rem; padding: 9px 14px; border-radius: 8px; -webkit-tap-highlight-color: transparent; }
+    .btn-icon { background: none; border: none; cursor: pointer; padding: 8px; border-radius: 8px; line-height: 1; -webkit-tap-highlight-color: transparent; color: #888; font-size: 1.2rem; }
+    .input-field { background: #f5f5f5; border: 1.5px solid #e0e0e0; color: #111; padding: 13px 14px; font-size: 1rem; border-radius: 10px; width: 100%; font-family: 'DM Mono', monospace; }
+    .input-field:focus { outline: none; border-color: #111; background: #fff; }
+    .num-input { background: #f5f5f5; border: 1.5px solid #e0e0e0; color: #111; padding: 13px 6px; font-size: 1.15rem; border-radius: 10px; width: 80px; text-align: center; font-family: 'DM Mono', monospace; }
+    .num-input:focus { outline: none; border-color: #e05c00; background: #fff; }
+    .ex-pill { background: #f3f3f3; border: 1.5px solid #e0e0e0; color: #333; font-family: system-ui, -apple-system, sans-serif; font-size: 0.88rem; padding: 10px 14px; cursor: pointer; border-radius: 8px; -webkit-tap-highlight-color: transparent; }
+    .ex-pill.sel { background: #111; color: #fff; border-color: #111; }
+    .tag { background: #f0f0f0; color: #666; font-family: 'DM Mono', monospace; font-size: 0.72rem; padding: 3px 9px; border-radius: 4px; display: inline-block; border: 1px solid #e0e0e0; }
+    .hint { background: #fffbea; border: 1px dashed #e0c040; color: #7a6000; font-family: 'DM Mono', monospace; font-size: 0.72rem; padding: 10px 12px; border-radius: 8px; margin-bottom: 10px; }
+    .divider { border: none; border-top: 1px solid #eee; margin: 16px 0; }
+    .vol-row { display: flex; align-items: center; gap: 10px; margin-bottom: 13px; }
+    .vol-label { font-family: 'DM Mono', monospace; font-size: 0.73rem; width: 108px; color: #444; flex-shrink: 0; }
+    .vol-count { font-family: 'DM Mono', monospace; font-size: 0.82rem; width: 28px; text-align: right; flex-shrink: 0; font-weight: 500; }
+    .vol-target { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: #bbb; flex-shrink: 0; width: 40px; }
+    .su { color: #c07000; } .sok { color: #1a7a1a; } .so { color: #cc2222; }
+    .set-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+    .set-num { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: #bbb; width: 20px; text-align: center; flex-shrink: 0; }
+    .badge { background: #111; color: #fff; font-family: 'DM Mono', monospace; font-size: 0.7rem; padding: 3px 9px; border-radius: 4px; }
+    .pr-card { background: #fff; border: 1px solid #e8e8e8; border-left: 3px solid #111; padding: 14px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-radius: 10px; }
+    .slabel { font-family: 'DM Mono', monospace; font-size: 0.63rem; color: #bbb; letter-spacing: 2px; margin-bottom: 10px; text-transform: uppercase; }
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: flex-end; }
+    .modal { background: #fff; border-radius: 20px 20px 0 0; padding: 12px 16px 20px; width: 100%; max-height: 88vh; overflow-y: auto; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
+    .modal-handle { width: 40px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 16px; }
+    .hidden { display: none !important; }
+    .flex { display: flex; } .flex-col { flex-direction: column; } .items-center { align-items: center; }
+    .gap8 { gap: 8px; } .gap10 { gap: 10px; } .wrap { flex-wrap: wrap; }
+    .muscle-hdr { font-family: 'Bebas Neue', sans-serif; font-size: 0.85rem; color: #444; letter-spacing: 3px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .install-banner { background: #111; color: #fff; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-family: 'DM Mono', monospace; font-size: 0.75rem; }
+    .install-banner button { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; background: #e05c00; border: none; color: #fff; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; white-space: nowrap; }
+    .install-banner .dismiss { background: none; border: 1px solid #444; color: #888; padding: 6px 10px; font-size: 0.75rem; }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+// ── PWA Manifest (injected inline as blob URL) ──────────────────────────
+const manifestData = {
+  name: "IronLog",
+  short_name: "IronLog",
+  description: "Gym session tracker with volume analysis",
+  start_url: "./",
+  display: "standalone",
+  background_color: "#f4f4f2",
+  theme_color: "#111111",
+  orientation: "portrait",
+  icons: [
+    { src: "data:image/svg+xml," + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='80' fill='%23111'/><text x='256' y='340' text-anchor='middle' font-family='Impact,sans-serif' font-size='280' fill='%23e05c00'>IL</text></svg>`), sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+  ]
+};
+const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+const manifestURL = URL.createObjectURL(manifestBlob);
+document.getElementById('manifest-placeholder').href = manifestURL;
+</script>
+
+<script type="module">
+// ── Data ────────────────────────────────────────────────────────────────
+const STORAGE_KEY = "gym_tracker_data_v1";
+
+const EXERCISE_MUSCLES = {
+  "Bench Press":       { "Chest": 1, "Triceps": 0.5, "Front Delts": 0.5 },
+  "Incline Press":     { "Chest": 1, "Front Delts": 0.75, "Triceps": 0.5 },
+  "Dip":               { "Chest": 1, "Triceps": 0.5, "Front Delts": 0.25 },
+  "Barbell Row":       { "Back": 1, "Rear Delts": 0.5, "Biceps": 0.5 },
+  "Cable Row":         { "Back": 1, "Rear Delts": 0.5, "Biceps": 0.5 },
+  "Pull-Up":           { "Back": 1, "Biceps": 0.5 },
+  "Lat Pulldown":      { "Back": 1, "Biceps": 0.5 },
+  "Squat":             { "Quads": 1, "Glutes": 0.75, "Lower Back": 0.25 },
+  "Leg Press":         { "Quads": 1, "Glutes": 0.5 },
+  "Lunge":             { "Quads": 1, "Glutes": 0.75, "Hamstrings": 0.25 },
+  "Leg Extension":     { "Quads": 1 },
+  "Deadlift":          { "Hamstrings": 0.75, "Glutes": 0.75, "Lower Back": 0.75 },
+  "Romanian Deadlift": { "Hamstrings": 1, "Glutes": 0.75, "Lower Back": 0.5 },
+  "Leg Curl":          { "Hamstrings": 1 },
+  "Overhead Press":    { "Front Delts": 1, "Triceps": 0.5, "Side Delts": 0.25 },
+  "Lateral Raise":     { "Side Delts": 1 },
+  "Face Pull":         { "Rear Delts": 1, "Back": 0.5 },
+  "Curl":              { "Biceps": 1 },
+  "Hammer Curl":       { "Biceps": 0.75, "Forearms": 0.75 },
+  "Tricep Extension":  { "Triceps": 1 },
+  "Skull Crusher":     { "Triceps": 1 },
+  "Calf Raise":        { "Calves": 1 },
+  "Ab Wheel":          { "Abs": 1 },
+  "Crunch":            { "Abs": 1 },
+  "Plank":             { "Abs": 0.75, "Core Stabilizers": 0.25 },
+};
+
+const MUSCLE_TARGETS = {
+  "Chest":            { min: 10, max: 20 },
+  "Back":             { min: 10, max: 20 },
+  "Quads":            { min: 8,  max: 16 },
+  "Hamstrings":       { min: 6,  max: 12 },
+  "Glutes":           { min: 6,  max: 12 },
+  "Front Delts":      { min: 6,  max: 12 },
+  "Side Delts":       { min: 8,  max: 16 },
+  "Rear Delts":       { min: 8,  max: 16 },
+  "Biceps":           { min: 8,  max: 14 },
+  "Triceps":          { min: 8,  max: 14 },
+  "Forearms":         { min: 4,  max: 10 },
+  "Calves":           { min: 6,  max: 12 },
+  "Abs":              { min: 6,  max: 16 },
+  "Core Stabilizers": { min: 3,  max: 8  },
+  "Lower Back":       { min: 4,  max: 8  },
+};
+
+const ALL_MUSCLES = Object.keys(MUSCLE_TARGETS);
+const DEFAULT_EXERCISES = Object.keys(EXERCISE_MUSCLES);
+
+const MUSCLE_ICONS = {
+  "Chest": `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 8 Q6 5 12 7 Q18 5 20 8 Q22 13 20 16 Q17 19 12 18 Q7 19 4 16 Q2 13 4 8Z" fill="#e05c00" opacity="0.85"/><circle cx="12" cy="6" r="2" fill="#555"/></svg>`,
+  "Back": `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="7" y="4" width="10" height="6" rx="2" fill="#e05c00" opacity="0.85"/><rect x="8" y="11" width="8" height="5" rx="1" fill="#e05c00" opacity="0.6"/><rect x="10" y="4" width="4" height="16" rx="1" fill="#555" opacity="0.3"/></svg>`,
+  "Quads": `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 4 Q7 10 8 18 L10 18 Q10 10 10 4Z" fill="#e05c00" opacity="0.85"/><path d="M14 4 Q15 10 14 18 L16 18 Q16 10 16 4Z" fill="#e05c00" opacity="0.85"/><ellipse cx="9" cy="3" rx="2" ry="1.5" fill="#555"/><ellipse cx="15" cy="3" rx="2" ry="1.5" fill="#555"/></svg>`,
+  "Hamstrings": `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 6 Q7 12 8 20 L10 20 Q10 12 10 6Z" fill="#555" opacity="0.3"/><path d="M14 6 Q15 12 14 20 L16 20 Q16 12 16 6Z" fill="#555" opacity="0.3"/><path d="M8 12 Q7 16 8 20 L10 20 Q10 16 10 12Z" fill="#e05c00" opacity="0.85"/><path d="M14 12 Q15 16 14 20 L16 20 Q16 12 14 12Z" fill="#e05c00" opacity="0.85"/></svg>`,
+  "Glutes": `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><ellipse cx="8.5" cy="11" rx="4" ry="5" fill="#e05c00" opacity="0.85"/><ellipse cx="15.5" cy="11" rx="4" ry="5" fill="#e05c00" opacity="0.85"/></svg>`,
+  "Front Delts": `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="7" r="2" fill="#555"/><rect x="10" y="9" width="4" height="9" rx="1" fill="#555" opacity="0.4"/><ellipse cx="6" cy="9" rx="3" ry="2.5" fill="#e05c00" opacity="0.85" transform="rotate(-20 6 9)"/><ellipse cx="18" cy="9" rx="3" ry="2.5" fill="#e05c00" opacity="0.85" transform="rotate(20 18 9)"/></svg>`,
+  "Side Delts": `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="7" r="2" fill="#555"/><rect x="10" y="9" width="4" height="9" rx="1" fill="#555" opacity="0.4"/><ellipse cx="5" cy="10" rx="3.5" ry="2" fill="#e05c00" opacity="0.85"/><ellipse cx="19" cy="10" rx="3.5" ry="2" fill="#e05c00" opacity="0.85"/></svg>`,
+  "Rear Delts": `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="7" r="2" fill="#555"/><rect x="10" y="9" width="4" height="9" rx="1" fill="#555" opacity="0.4"/><ellipse cx="6" cy="11" rx="3" ry="2.5" fill="#e05c00" opacity="0.85" transform="rotate(20 6 11)"/><ellipse cx="18" cy="11" rx="3" ry="2.5" fill="#e05c00" opacity="0.85" transform="rotate(-20 18 11)"/></svg>`,
+  "Biceps": `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="10" y="12" width="4" height="8" rx="1" fill="#555" opacity="0.4"/><ellipse cx="12" cy="10" rx="4" ry="3" fill="#e05c00" opacity="0.85"/><circle cx="12" cy="5" r="2" fill="#555"/></svg>`,
+  "Triceps": `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="10" y="12" width="4" height="8" rx="1" fill="#555" opacity="0.4"/><path d="M8 8 Q12 12 16 8 Q16 4 12 5 Q8 4 8 8Z" fill="#e05c00" opacity="0.85"/><circle cx="12" cy="5" r="2" fill="#555"/></svg>`,
+  "Forearms": `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9 3 Q8 9 10 17 L12 20 L14 17 Q16 9 15 3Z" fill="#e05c00" opacity="0.75"/><path d="M9 3 Q8 9 10 17 L12 20 L14 17 Q16 9 15 3Z" fill="#555" opacity="0.2"/></svg>`,
+  "Calves": `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 4 Q6 9 8 13 Q7 18 8 22 L10 22 Q9 18 10 13 Q12 9 11 4Z" fill="#e05c00" opacity="0.85"/><path d="M14 4 Q16 9 14 13 Q15 18 14 22 L16 22 Q17 18 16 13 Q18 9 16 4Z" fill="#e05c00" opacity="0.85"/></svg>`,
+  "Abs": `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="9" y="4" width="6" height="3.5" rx="1.5" fill="#e05c00" opacity="0.9"/><rect x="9" y="9" width="6" height="3.5" rx="1.5" fill="#e05c00" opacity="0.85"/><rect x="9" y="14" width="6" height="3.5" rx="1.5" fill="#e05c00" opacity="0.7"/></svg>`,
+  "Core Stabilizers": `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="12" rx="7" ry="5" fill="none" stroke="#e05c00" stroke-width="2" opacity="0.85"/><ellipse cx="12" cy="12" rx="3" ry="2" fill="#e05c00" opacity="0.5"/><circle cx="12" cy="12" r="1.5" fill="#e05c00"/></svg>`,
+  "Lower Back": `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="7" y="3" width="10" height="5" rx="2" fill="#555" opacity="0.3"/><rect x="8" y="9" width="8" height="7" rx="2" fill="#e05c00" opacity="0.85"/><rect x="10" y="3" width="4" height="18" rx="1" fill="#555" opacity="0.15"/></svg>`,
+  "Other": `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" fill="#ddd"/><text x="12" y="16" text-anchor="middle" font-size="10" fill="#888">?</text></svg>`
+};
+
+// ── Helpers ─────────────────────────────────────────────────────────────
+function getMusclesForExercise(exercise, customMap) {
+  const custom = customMap && customMap[exercise];
+  if (custom && typeof custom === "object" && !Array.isArray(custom)) return custom;
+  return EXERCISE_MUSCLES[exercise] || {};
+}
+function getPrimaryMuscle(exercise, customMap) {
+  const m = getMusclesForExercise(exercise, customMap);
+  const entries = Object.entries(m);
+  if (!entries.length) return null;
+  return entries.reduce((a, b) => b[1] > a[1] ? b : a)[0];
+}
+function calcVolume(sessions, exerciseMuscles, filterFn) {
+  const counts = {};
+  for (const s of sessions) {
+    if (filterFn && !filterFn(s)) continue;
+    for (const entry of s.entries) {
+      const muscles = getMusclesForExercise(entry.exercise, exerciseMuscles);
+      const setCount = entry.sets.filter(x => x.reps && parseInt(x.reps) > 0).length;
+      for (const [muscle, weight] of Object.entries(muscles))
+        counts[muscle] = (counts[muscle] || 0) + setCount * weight;
+    }
+  }
+  for (const m of Object.keys(counts)) counts[m] = Math.round(counts[m] * 10) / 10;
+  return counts;
+}
+function getWeekBounds(dateStr) {
+  const d = new Date(dateStr + "T12:00:00");
+  const mon = new Date(d);
+  mon.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  const sun = new Date(mon);
+  sun.setDate(mon.getDate() + 6);
+  const fmt = x => x.toISOString().split("T")[0];
+  return { start: fmt(mon), end: fmt(sun) };
+}
+function getWeekRange(offsetWeeks) {
+  const today = new Date().toISOString().split("T")[0];
+  const base = new Date(today + "T12:00:00");
+  base.setDate(base.getDate() + offsetWeeks * 7);
+  const bounds = getWeekBounds(base.toISOString().split("T")[0]);
+  const mon = new Date(bounds.start + "T12:00:00");
+  const sun = new Date(bounds.end + "T12:00:00");
+  const label = offsetWeeks === 0 ? "This Week"
+    : offsetWeeks === -1 ? "Last Week"
+    : mon.toLocaleDateString("en", { month: "short", day: "numeric" }) + " - " + sun.toLocaleDateString("en", { month: "short", day: "numeric" });
+  return { ...bounds, label };
+}
+function getPR(sessions, exercise) {
+  let best = null;
+  for (const s of sessions)
+    for (const e of s.entries)
+      if (e.exercise === exercise)
+        for (const set of e.sets) {
+          const w = parseFloat(set.weight), r = parseInt(set.reps);
+          if (!isNaN(w) && !isNaN(r) && w > 0 && (!best || w > best.weight || (w === best.weight && r > best.reps)))
+            best = { weight: w, reps: r, date: s.date };
+        }
+  return best;
+}
+function getLastSession(sessions, exercise) {
+  for (let i = sessions.length - 1; i >= 0; i--)
+    for (const e of sessions[i].entries)
+      if (e.exercise === exercise) return { session: sessions[i], entry: e };
+  return null;
+}
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const base = { sessions: [], exercises: [...DEFAULT_EXERCISES], exerciseMuscles: {} };
+    if (!raw) {
+      for (const ex of DEFAULT_EXERCISES) base.exerciseMuscles[ex] = EXERCISE_MUSCLES[ex];
+      return base;
+    }
+    const parsed = JSON.parse(raw);
+    if (!parsed.sessions) parsed.sessions = [];
+    if (!parsed.exercises) parsed.exercises = [...DEFAULT_EXERCISES];
+    if (!parsed.exerciseMuscles) parsed.exerciseMuscles = {};
+    for (const [ex, val] of Object.entries(parsed.exerciseMuscles))
+      if (Array.isArray(val)) { const obj = {}; val.forEach(m => { obj[m] = 1; }); parsed.exerciseMuscles[ex] = obj; }
+    for (const ex of DEFAULT_EXERCISES) {
+      if (!parsed.exercises.includes(ex)) parsed.exercises.push(ex);
+      parsed.exerciseMuscles[ex] = EXERCISE_MUSCLES[ex];
+    }
+    return parsed;
+  } catch(e) {
+    const base = { sessions: [], exercises: [...DEFAULT_EXERCISES], exerciseMuscles: {} };
+    for (const ex of DEFAULT_EXERCISES) base.exerciseMuscles[ex] = EXERCISE_MUSCLES[ex];
+    return base;
+  }
+}
+function saveData(d) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch(e) {} }
+
+// ── App State ────────────────────────────────────────────────────────────
+let state = {
+  data: loadData(),
+  view: "dashboard",
+  session: null,
+  selEx: null,
+  newExName: "",
+  showAddEx: false,
+  histFilter: "",
+  weekOffset: 0,
+  mappingEx: null,
+  editSess: null,
+  installPrompt: null,
+  showInstallBanner: false,
+};
+
+function setState(patch) {
+  state = { ...state, ...patch };
+  if (patch.data !== undefined) saveData(state.data);
+  render();
+}
+
+// ── PWA Install ──────────────────────────────────────────────────────────
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  setState({ installPrompt: e, showInstallBanner: true });
+});
+
+// ── HTML helpers ─────────────────────────────────────────────────────────
+function h(tag, attrs, ...children) {
+  const el = document.createElement(tag);
+  if (attrs) {
+    for (const [k, v] of Object.entries(attrs)) {
+      if (k === 'className') el.className = v;
+      else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+      else if (k.startsWith('on')) el.addEventListener(k.slice(2).toLowerCase(), v);
+      else if (k === 'innerHTML') el.innerHTML = v;
+      else if (v !== false && v !== null && v !== undefined) el.setAttribute(k, v);
+    }
+  }
+  for (const child of children.flat()) {
+    if (child == null || child === false) continue;
+    el.appendChild(typeof child === 'string' ? document.createTextNode(child) : child);
+  }
+  return el;
+}
+function svgIcon(html) {
+  const span = document.createElement('span');
+  span.innerHTML = html;
+  return span.firstChild;
+}
+function simpleBar(sets, min, max) {
+  const pct = Math.min((sets / max) * 100, 100);
+  const minPct = (min / max) * 100;
+  const color = sets === 0 ? "#e0e0e0" : sets < min ? "#e08800" : sets > max ? "#cc2222" : "#1a7a1a";
+  const wrap = h('div', { style: { position:"relative", height:"8px", background:"#ececec", borderRadius:"4px", flex:1 } });
+  wrap.innerHTML = `<div style="position:absolute;left:${minPct}%;top:0;bottom:0;width:2px;background:#ccc"></div><div style="height:100%;width:${pct}%;background:${color};border-radius:4px;transition:width .4s"></div>`;
+  return wrap;
+}
+function volumeBar(before, added, min, max) {
+  const scale = max || 1;
+  const beforePct = Math.min((before / scale) * 100, 100);
+  const addedPct = Math.min((added / scale) * 100, Math.max(0, 100 - beforePct));
+  const after = before + added;
+  const color = after === 0 ? "#e0e0e0" : after < min ? "#e08800" : after > max ? "#cc2222" : "#1a7a1a";
+  const wrap = h('div', { style: { position:"relative", height:"10px", background:"#ececec", borderRadius:"5px", flex:1 } });
+  if (min > 0) { const tick = h('div', { style: { position:"absolute", left:(min/scale*100)+"%", top:0, bottom:0, width:"2px", background:"#d0d0d0" } }); wrap.appendChild(tick); }
+  if (beforePct > 0) { const b = h('div', { style: { position:"absolute", left:0, top:0, bottom:0, width:beforePct+"%", background:"#c8c8c8", borderRadius:"5px 0 0 5px" } }); wrap.appendChild(b); }
+  if (addedPct > 0) { const a = h('div', { style: { position:"absolute", left:beforePct+"%", top:0, bottom:0, width:addedPct+"%", background:color, borderRadius: beforePct===0?"5px":"0 5px 5px 0", opacity:0.9 } }); wrap.appendChild(a); }
+  return wrap;
+}
+
+// ── Grouped exercises ────────────────────────────────────────────────────
+function groupExercises() {
+  const grouped = {};
+  for (const ex of state.data.exercises) {
+    const g = getPrimaryMuscle(ex, state.data.exerciseMuscles) || "Other";
+    if (!grouped[g]) grouped[g] = [];
+    grouped[g].push(ex);
+  }
+  const groups = [...ALL_MUSCLES.filter(m => grouped[m]), ...(grouped["Other"] ? ["Other"] : [])];
+  return { grouped, groups };
+}
+
+function exColor(ex, weeklyVol) {
+  const muscles = getMusclesForExercise(ex, state.data.exerciseMuscles);
+  const entries = Object.entries(muscles);
+  if (!entries.length) return "neutral";
+  let hasRed = false, hasGreen = false;
+  for (const [m, w] of entries) {
+    if (w < 0.25) continue;
+    const target = MUSCLE_TARGETS[m];
+    if (!target) continue;
+    const cur = weeklyVol[m] || 0;
+    if (cur >= target.max) { hasRed = true; break; }
+    if (cur < target.min) hasGreen = true;
+  }
+  if (hasRed) return "red";
+  if (hasGreen) return "green";
+  return "yellow";
+}
+
+// ── Views ────────────────────────────────────────────────────────────────
+function renderDashboard(weeklyVol, prs) {
+  const statsGrid = h('div', { style: { display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:"10px", marginBottom:"20px", marginTop:"4px" } },
+    ...[ {l:"SESSIONS", v:state.data.sessions.length}, {l:"EXERCISES", v:state.data.exercises.length}, {l:"PRs", v:prs.length} ]
+      .map(s => h('div', { className:"card", style:{textAlign:"center",padding:"14px 8px"} },
+        h('div', { style:{fontSize:"2rem",color:"#e05c00",lineHeight:1} }, String(s.v)),
+        h('div', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.6rem",color:"#aaa",marginTop:"4px",letterSpacing:"1px"} }, s.l)
+      ))
+  );
+  const startBtn = h('button', { className:"btn-primary", style:{marginBottom:"24px",fontSize:"1.2rem",padding:"17px"}, onClick:() => { setState({ session: { date: new Date().toISOString().split("T")[0], entries: [] }, view: "log" }); } }, "START SESSION");
+
+  const active = ALL_MUSCLES.filter(m => weeklyVol[m] > 0);
+  let volSection;
+  if (!active.length) {
+    volSection = h('div', { style:{fontFamily:"'DM Mono',monospace",color:"#bbb",fontSize:"0.78rem",textAlign:"center",padding:"28px 20px",border:"1.5px dashed #ddd",borderRadius:"12px"} }, "Log sessions this week to see volume");
+  } else {
+    const rows = active.map(m => {
+      const sets = weeklyVol[m] || 0;
+      const {min, max} = MUSCLE_TARGETS[m];
+      const cls = sets < min ? "su" : sets > max ? "so" : "sok";
+      return h('div', { className:"vol-row" },
+        h('span', { className:"vol-label" }, m),
+        simpleBar(sets, min, max),
+        h('span', { className:"vol-count " + cls }, String(sets)),
+        h('span', { className:"vol-target" }, `${min}–${max}`)
+      );
+    });
+    volSection = h('div', {},
+      h('p', { className:"slabel" }, "THIS WEEK"),
+      h('div', { className:"card", style:{padding:"14px 16px"} }, ...rows)
+    );
+  }
+
+  let prSection = h('span', {});
+  if (prs.length > 0) {
+    prSection = h('div', { style:{marginTop:"20px"} },
+      h('p', { className:"slabel" }, "TOP PRs"),
+      ...prs.slice(-3).reverse().map(({exercise, pr}) =>
+        h('div', { className:"pr-card" },
+          h('span', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.85rem"} }, exercise),
+          h('span', { className:"badge" }, `${pr.weight} lb x ${pr.reps}`)
+        )
+      )
+    );
+  }
+  return h('div', {}, statsGrid, startBtn, volSection, prSection);
+}
+
+function renderLog(weeklyVol) {
+  if (!state.session) {
+    return h('div', { style:{textAlign:"center",padding:"60px 0"} },
+      h('p', { style:{fontFamily:"'DM Mono',monospace",color:"#aaa",marginBottom:"20px"} }, "No active session"),
+      h('button', { className:"btn-primary", onClick:() => setState({ session: { date: new Date().toISOString().split("T")[0], entries: [] } }) }, "START SESSION")
+    );
+  }
+
+  const { grouped, groups } = groupExercises();
+  const colorStyles = {
+    green:   { bg:"#f0faf0", border:"#6dbb6d", text:"#1a6b1a" },
+    yellow:  { bg:"#fffbea", border:"#d4a800", text:"#7a5c00" },
+    red:     { bg:"#fff2f2", border:"#e08080", text:"#aa2222" },
+    neutral: { bg:"#f3f3f3", border:"#e0e0e0", text:"#333"   },
+  };
+
+  const legend = h('div', { style:{display:"flex",gap:"10px",marginBottom:"12px",fontFamily:"'DM Mono',monospace",fontSize:"0.62rem",flexWrap:"wrap"} },
+    h('span', { style:{color:"#1a6b1a"} }, "● needs work"),
+    h('span', { style:{color:"#7a5c00"} }, "● in range"),
+    h('span', { style:{color:"#aa2222"} }, "● near max")
+  );
+
+  const groupEls = groups.map(g => {
+    const hdr = h('div', { className:"muscle-hdr" });
+    hdr.innerHTML = (MUSCLE_ICONS[g] || MUSCLE_ICONS["Other"]) + g.toUpperCase();
+    const pills = h('div', { style:{display:"flex",flexWrap:"wrap",gap:"8px"} },
+      ...grouped[g].map(ex => {
+        const color = exColor(ex, weeklyVol);
+        const cs = colorStyles[color];
+        const isSel = state.selEx === ex;
+        const btn = h('button', {
+          style: { fontFamily:"system-ui,-apple-system,sans-serif", fontSize:"0.88rem", padding:"10px 14px", borderRadius:"8px", cursor:"pointer",
+            border:"1.5px solid " + (isSel ? "#111" : cs.border), background: isSel ? "#111" : cs.bg,
+            color: isSel ? "#fff" : cs.text, WebkitTapHighlightColor:"transparent" },
+          onClick: () => setState({ selEx: state.selEx === ex ? null : ex })
+        }, ex);
+        return btn;
+      })
+    );
+    return h('div', { style:{marginBottom:"14px"} }, hdr, pills);
+  });
+
+  const customBtn = h('button', { className:"ex-pill", style:{borderStyle:"dashed",color:"#aaa",marginTop:"4px"}, onClick:() => setState({ showAddEx: true }) }, "+ Custom");
+  const pickerSection = h('div', { style:{marginBottom:"4px"} }, legend, ...groupEls, customBtn);
+
+  let addExInput = h('span', {});
+  if (state.showAddEx) {
+    const inp = h('input', { className:"input-field", placeholder:"Exercise name", value:state.newExName, onInput: e => { state.newExName = e.target.value; } });
+    const addBtn = h('button', { className:"btn-ghost", style:{whiteSpace:"nowrap"}, onClick:() => {
+      const name = state.newExName.trim();
+      if (name && !state.data.exercises.includes(name)) {
+        const newData = { ...state.data, exercises: [...state.data.exercises, name] };
+        setState({ data: newData, newExName: "", showAddEx: false });
+      }
+    }}, "ADD");
+    addExInput = h('div', { style:{display:"flex",gap:"8px",marginBottom:"12px"} }, inp, addBtn);
+  }
+
+  let addSelBtn = h('span', {});
+  if (state.selEx) {
+    addSelBtn = h('button', { className:"btn-primary", style:{marginBottom:"16px"}, onClick:() => {
+      const newSession = { ...state.session, entries: [...state.session.entries, { exercise: state.selEx, sets: [{weight:"",reps:""}] }] };
+      setState({ session: newSession, selEx: null });
+    }}, "+ ADD " + state.selEx.toUpperCase());
+  }
+
+  const divider = h('hr', { className:"divider" });
+  let emptyMsg = h('span', {});
+  if (!state.session.entries.length) {
+    emptyMsg = h('p', { style:{fontFamily:"'DM Mono',monospace",color:"#ccc",textAlign:"center",padding:"24px 0"} }, "Tap an exercise above");
+  }
+
+  const entryCards = state.session.entries.map((entry, ei) => {
+    const last = getLastSession(state.data.sessions, entry.exercise);
+    const pr = getPR(state.data.sessions, entry.exercise);
+    const muscles = getMusclesForExercise(entry.exercise, state.data.exerciseMuscles);
+    const muscleTags = Object.entries(muscles).map(([m, w]) =>
+      h('span', { style:{background:"#f0f0f0",color:"#666",fontFamily:"'DM Mono',monospace",fontSize:"0.62rem",padding:"2px 7px",borderRadius:"4px",border:"1px solid #e8e8e8"} }, m + (w < 1 ? " x" + w : ""))
+    );
+    const hdr = h('div', { style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"8px"} },
+      h('div', { style:{flex:1} },
+        h('span', { style:{fontSize:"1.1rem",letterSpacing:"2px"} }, entry.exercise),
+        h('div', { style:{display:"flex",gap:"4px",marginTop:"6px",flexWrap:"wrap"} }, ...muscleTags)
+      ),
+      h('button', { className:"btn-icon", style:{color:"#cc4444"}, onClick:() => {
+        const newSession = { ...state.session, entries: state.session.entries.filter((_,i) => i !== ei) };
+        setState({ session: newSession });
+      }}, "✕")
+    );
+    const hints = [];
+    if (pr) hints.push(h('div', { className:"hint" }, `🏆 PR: ${pr.weight}lb x ${pr.reps} — Beat it!`));
+    else if (last) hints.push(h('div', { className:"hint" }, `Last: ${last.entry.sets.map(s => s.weight + "lb x" + s.reps).join(", ")}`));
+
+    const colHdr = h('div', { style:{display:"flex",gap:"10px",margin:"10px 0 8px",paddingLeft:"30px"} },
+      h('span', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.65rem",color:"#bbb",width:"80px",textAlign:"center"} }, "WEIGHT (lb)"),
+      h('span', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.65rem",color:"#bbb",width:"80px",textAlign:"center"} }, "REPS")
+    );
+
+    const setRows = entry.sets.map((set, si) => {
+      const wInp = h('input', { className:"num-input", type:"number", inputmode:"decimal", placeholder:"0", value:set.weight });
+      wInp.addEventListener('input', e => {
+        const s = { ...state.session };
+        s.entries = s.entries.map((en,i) => i!==ei ? en : { ...en, sets: en.sets.map((st,j) => j!==si ? st : { ...st, weight:e.target.value }) });
+        setState({ session: s });
+      });
+      const rInp = h('input', { className:"num-input", type:"number", inputmode:"numeric", placeholder:"0", value:set.reps });
+      rInp.addEventListener('input', e => {
+        const s = { ...state.session };
+        s.entries = s.entries.map((en,i) => i!==ei ? en : { ...en, sets: en.sets.map((st,j) => j!==si ? st : { ...st, reps:e.target.value }) });
+        setState({ session: s });
+      });
+      const del = h('button', { className:"btn-icon", style:{color:"#cc4444"}, onClick:() => {
+        const s = { ...state.session };
+        s.entries = s.entries.map((en,i) => { if(i!==ei) return en; const sets = en.sets.filter((_,j) => j!==si); return { ...en, sets: sets.length ? sets : [{weight:"",reps:""}] }; });
+        setState({ session: s });
+      }}, "✕");
+      return h('div', { className:"set-row" }, h('span', { className:"set-num" }, String(si+1)), wInp, rInp, del);
+    });
+
+    const addSetBtn = h('button', { className:"btn-ghost", style:{marginTop:"8px",fontSize:"0.9rem",padding:"10px 16px"}, onClick:() => {
+      const s = { ...state.session };
+      s.entries = s.entries.map((en,i) => i!==ei ? en : { ...en, sets: [...en.sets, {weight:"",reps:""}] });
+      setState({ session: s });
+    }}, "+ SET");
+
+    return h('div', { className:"card", style:{marginBottom:"14px"} }, hdr, ...hints, colHdr, ...setRows, addSetBtn);
+  });
+
+  const finishBtn = h('button', { className:"btn-primary", style:{width:"auto",padding:"12px 20px",fontSize:"1rem"}, disabled: !state.session.entries.length,
+    onClick:() => {
+      const newData = { ...state.data, sessions: [...state.data.sessions, state.session] };
+      setState({ data: newData, session: null, view: "dashboard" });
+    }
+  }, "FINISH");
+
+  return h('div', {},
+    h('div', { style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"} },
+      h('div', {},
+        h('span', { style:{fontSize:"1.4rem",letterSpacing:"3px"} }, "SESSION"),
+        h('span', { className:"tag", style:{marginLeft:"8px"} }, state.session.date)
+      ),
+      finishBtn
+    ),
+    h('p', { className:"slabel" }, "ADD EXERCISE"),
+    pickerSection, addExInput, addSelBtn, divider, emptyMsg, ...entryCards
+  );
+}
+
+function renderVolume(weeklyVol) {
+  const weekRange = getWeekRange(state.weekOffset);
+  const weekNav = h('div', { style:{display:"flex",alignItems:"center",gap:"10px",marginBottom:"20px"} },
+    h('button', { style:{background:"#f5f5f5",border:"1.5px solid #e0e0e0",color:"#555",fontSize:"1.3rem",width:"44px",height:"44px",cursor:"pointer",borderRadius:"10px",flexShrink:0},
+      onClick:() => setState({ weekOffset: state.weekOffset - 1 }) }, "<"),
+    h('span', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.82rem",color:"#222",flex:1,textAlign:"center"} }, weekRange.label),
+    h('button', { style:{background:"#f5f5f5",border:"1.5px solid #e0e0e0",color: state.weekOffset===0?"#ccc":"#555",fontSize:"1.3rem",width:"44px",height:"44px",cursor:"pointer",borderRadius:"10px",flexShrink:0},
+      disabled: state.weekOffset === 0, onClick:() => setState({ weekOffset: Math.min(state.weekOffset + 1, 0) }) }, ">")
+  );
+
+  const muscleRows = ALL_MUSCLES.map(m => {
+    const sets = weeklyVol[m] || 0;
+    const {min, max} = MUSCLE_TARGETS[m];
+    const cls = sets===0?"":sets<min?"su":sets>max?"so":"sok";
+    return h('div', { className:"vol-row" },
+      h('span', { className:"vol-label" }, m), simpleBar(sets, min, max),
+      h('span', { className:"vol-count " + cls }, String(sets)),
+      h('span', { className:"vol-target" }, `${min}–${max}`)
+    );
+  });
+
+  const { grouped, groups } = groupExercises();
+  const exGroups = groups.map(g => {
+    const pills = grouped[g].map(ex => {
+      const mc = Object.keys(getMusclesForExercise(ex, state.data.exerciseMuscles)).length;
+      const wrap = h('div', { style:{display:"flex",alignItems:"center",background:"#f5f5f5",border:"1.5px solid #e8e8e8",borderRadius:"8px",overflow:"hidden"} });
+      const nameBtn = h('button', { style:{background:"none",border:"none",cursor:"pointer",padding:"10px 12px",fontFamily:"system-ui,-apple-system,sans-serif",fontSize:"0.8rem",color:"#333",display:"flex",alignItems:"center",gap:"6px"},
+        onClick:() => setState({ mappingEx: ex }) }, ex);
+      if (mc > 0) nameBtn.appendChild(h('span', { style:{background:"#e0e0e0",color:"#888",fontSize:"0.62rem",padding:"1px 6px",borderRadius:"3px"} }, String(mc)));
+      const delBtn = h('button', { style:{background:"none",border:"none",borderLeft:"1px solid #e0e0e0",cursor:"pointer",padding:"10px 12px",color:"#cc4444",fontSize:"1rem"},
+        onClick:() => { const nd = { ...state.data, exercises: state.data.exercises.filter(e => e !== ex) }; setState({ data: nd }); }
+      }, "✕");
+      wrap.appendChild(nameBtn); wrap.appendChild(delBtn);
+      return wrap;
+    });
+    return h('div', { style:{marginBottom:"16px"} },
+      h('p', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.62rem",color:"#bbb",letterSpacing:"2px",marginBottom:"8px"} }, g.toUpperCase()),
+      h('div', { style:{display:"flex",flexWrap:"wrap",gap:"8px"} }, ...pills)
+    );
+  });
+
+  const inp = h('input', { className:"input-field", placeholder:"New exercise...", value:state.newExName, onInput: e => { state.newExName = e.target.value; } });
+  const addBtn = h('button', { className:"btn-ghost", style:{whiteSpace:"nowrap"}, onClick:() => {
+    const name = state.newExName.trim();
+    if (name && !state.data.exercises.includes(name)) {
+      setState({ data: { ...state.data, exercises: [...state.data.exercises, name] }, newExName: "" });
+    }
+  }}, "ADD");
+
+  return h('div', {},
+    h('span', { style:{fontSize:"1.5rem",letterSpacing:"3px"} }, "VOLUME"),
+    h('p', { className:"slabel", style:{marginTop:"4px"} }, "WEEKLY SETS PER MUSCLE GROUP"),
+    weekNav, ...muscleRows,
+    h('hr', { className:"divider", style:{marginTop:"24px",marginBottom:"20px"} }),
+    h('p', { className:"slabel" }, "EXERCISES"),
+    h('p', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.68rem",color:"#bbb",marginBottom:"16px"} }, "Tap name to edit muscle mapping"),
+    ...exGroups,
+    h('div', { style:{display:"flex",gap:"8px",marginTop:"8px"} }, inp, addBtn)
+  );
+}
+
+function renderHistory() {
+  const filtered = [...state.data.sessions].reverse().filter(s =>
+    !state.histFilter || s.entries.some(e => e.exercise.toLowerCase().includes(state.histFilter.toLowerCase()))
+  );
+  const inp = h('input', { className:"input-field", style:{marginTop:"12px",marginBottom:"14px"}, placeholder:"Search by exercise...", value:state.histFilter,
+    onInput: e => setState({ histFilter: e.target.value }) });
+
+  if (!filtered.length) {
+    return h('div', {},
+      h('span', { style:{fontSize:"1.5rem",letterSpacing:"3px"} }, "HISTORY"), inp,
+      h('p', { style:{fontFamily:"'DM Mono',monospace",color:"#bbb",textAlign:"center",padding:"40px 0"} }, "No sessions yet")
+    );
+  }
+
+  const cards = filtered.map((sess, idx) => {
+    const realIdx = state.data.sessions.length - 1 - idx;
+    const sessVol = calcVolume([sess], state.data.exerciseMuscles);
+    const bounds = getWeekBounds(sess.date);
+    const beforeVol = calcVolume(state.data.sessions.filter(s => s !== sess), state.data.exerciseMuscles, s => s.date >= bounds.start && s.date <= bounds.end);
+    const trainedMuscles = Object.keys(sessVol).sort((a,b) => sessVol[b] - sessVol[a]);
+
+    const entryLines = sess.entries.map(e =>
+      h('div', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.82rem",color:"#888",marginBottom:"5px"} },
+        h('span', { style:{color:"#111"} }, e.exercise), " — " + e.sets.map(s => `${s.weight}lb x ${s.reps}`).join(", ")
+      )
+    );
+
+    let volSection = h('span', {});
+    if (trainedMuscles.length > 0) {
+      const mRows = trainedMuscles.map(m => {
+        const target = MUSCLE_TARGETS[m];
+        const before = Math.round((beforeVol[m]||0)*10)/10;
+        const added = sessVol[m]||0;
+        const after = Math.round((before+added)*10)/10;
+        const max = target ? target.max : Math.max(after, 10);
+        const min = target ? target.min : 0;
+        const afterColor = !target?"#aaa":after<min?"#e08800":after>max?"#cc2222":"#1a7a1a";
+        return h('div', { style:{display:"flex",alignItems:"center",gap:"8px",marginBottom:"9px"} },
+          h('span', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.72rem",color:"#666",width:"108px",flexShrink:0} }, m),
+          volumeBar(before, added, min, max),
+          h('span', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.72rem",color:afterColor,width:"28px",textAlign:"right",flexShrink:0,fontWeight:500} }, String(after)),
+          target ? h('span', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.6rem",color:"#ccc",width:"38px",flexShrink:0} }, `${min}–${max}`) : h('span',{})
+        );
+      });
+      volSection = h('div', { style:{marginTop:"14px",paddingTop:"12px",borderTop:"1px solid #f0f0f0"} },
+        h('p', { className:"slabel" }, "WEEKLY SETS AFTER THIS SESSION"),
+        ...mRows,
+        h('div', { style:{display:"flex",gap:"12px",marginTop:"8px",fontFamily:"'DM Mono',monospace",fontSize:"0.62rem",color:"#bbb"} },
+          h('span', {}, h('span', { style:{display:"inline-block",width:"10px",height:"8px",background:"#c8c8c8",borderRadius:"2px",marginRight:"4px",verticalAlign:"middle"} }), "before"),
+          h('span', {}, h('span', { style:{display:"inline-block",width:"10px",height:"8px",background:"#1a7a1a",borderRadius:"2px",marginRight:"4px",verticalAlign:"middle"} }), "added")
+        )
+      );
+    }
+
+    return h('div', { className:"card" },
+      h('div', { style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px"} },
+        h('span', { className:"tag" }, sess.date),
+        h('div', { style:{display:"flex",gap:"8px"} },
+          h('button', { className:"btn-ghost", style:{padding:"8px 14px",fontSize:"0.85rem"}, onClick:() => setState({ editSess: { idx: realIdx, session: JSON.parse(JSON.stringify(state.data.sessions[realIdx])) } }) }, "EDIT"),
+          h('button', { className:"btn-del", onClick:() => setState({ data: { ...state.data, sessions: state.data.sessions.filter((_,i) => i!==realIdx) } }) }, "DELETE")
+        )
+      ),
+      ...entryLines, volSection
+    );
+  });
+
+  return h('div', {}, h('span', { style:{fontSize:"1.5rem",letterSpacing:"3px"} }, "HISTORY"), inp, ...cards);
+}
+
+function renderPRs(prs) {
+  return h('div', {},
+    h('span', { style:{fontSize:"1.5rem",letterSpacing:"3px",display:"block",marginBottom:"4px"} }, "PERSONAL RECORDS"),
+    h('p', { className:"slabel" }, "YOUR HEAVIEST LOGGED LIFT PER EXERCISE"),
+    ...(prs.length ? prs.map(({exercise, pr}) =>
+      h('div', { className:"pr-card" },
+        h('div', {},
+          h('div', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.88rem",marginBottom:"4px"} }, exercise),
+          h('div', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.65rem",color:"#aaa"} }, pr.date)
+        ),
+        h('div', { style:{textAlign:"right"} },
+          h('div', { style:{color:"#e05c00",fontSize:"1.5rem",letterSpacing:"1px"} }, String(pr.weight), h('span', { style:{fontSize:"0.8rem",color:"#aaa",marginLeft:"3px"} }, "lb")),
+          h('div', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.72rem",color:"#888"} }, `${pr.reps} reps`)
+        )
+      )
+    ) : [h('p', { style:{fontFamily:"'DM Mono',monospace",color:"#bbb",textAlign:"center",padding:"40px 0"} }, "Log sessions to see PRs here")])
+  );
+}
+
+function renderMappingModal() {
+  if (!state.mappingEx) return h('span', {});
+  const rows = ALL_MUSCLES.map(m => {
+    const current = getMusclesForExercise(state.mappingEx, state.data.exerciseMuscles);
+    const val = current[m] || 0;
+    const btns = [0, 0.25, 0.5, 0.75, 1].map(step => {
+      const btn = h('button', {
+        style: { flex:1, padding:"10px 0", border:"1.5px solid " + (val===step?"#111":"#ddd"), background: val===step?"#111":"#fafafa",
+          color: val===step?"#fff":"#888", fontFamily:"'DM Mono',monospace", fontSize:"0.65rem", cursor:"pointer", borderRadius:"8px" },
+        onClick: () => {
+          const next = { ...current };
+          if (step === 0) delete next[m]; else next[m] = step;
+          setState({ data: { ...state.data, exerciseMuscles: { ...state.data.exerciseMuscles, [state.mappingEx]: next } } });
+        }
+      }, step === 0 ? "—" : String(step));
+      return btn;
+    });
+    return h('div', { style:{display:"flex",alignItems:"center",gap:"10px",marginBottom:"12px"} },
+      h('span', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.73rem",color:val>0?"#111":"#bbb",width:"104px",flexShrink:0} }, m),
+      h('div', { style:{display:"flex",gap:"6px",flex:1} }, ...btns)
+    );
+  });
+  const modal = h('div', { className:"modal", onClick: e => e.stopPropagation() },
+    h('div', { className:"modal-handle" }),
+    h('div', { style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"6px"} },
+      h('span', { style:{fontSize:"1.3rem",letterSpacing:"2px"} }, state.mappingEx),
+      h('button', { className:"btn-icon", onClick:() => setState({ mappingEx: null }) }, "✕")
+    ),
+    h('p', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.7rem",color:"#888",marginBottom:"18px"} }, "1.0 = primary, 0.5 = secondary, — = none"),
+    ...rows
+  );
+  return h('div', { className:"overlay", onClick:() => setState({ mappingEx: null }) }, modal);
+}
+
+function renderEditModal() {
+  if (!state.editSess) return h('span', {});
+  const sess = state.editSess.session;
+
+  const entryCards = sess.entries.map((entry, ei) => {
+    const setRows = entry.sets.map((set, si) => {
+      const wInp = h('input', { className:"num-input", type:"number", inputmode:"decimal", placeholder:"0", value:set.weight });
+      wInp.addEventListener('input', e => {
+        const s = JSON.parse(JSON.stringify(state.editSess));
+        s.session.entries[ei].sets[si].weight = e.target.value;
+        setState({ editSess: s });
+      });
+      const rInp = h('input', { className:"num-input", type:"number", inputmode:"numeric", placeholder:"0", value:set.reps });
+      rInp.addEventListener('input', e => {
+        const s = JSON.parse(JSON.stringify(state.editSess));
+        s.session.entries[ei].sets[si].reps = e.target.value;
+        setState({ editSess: s });
+      });
+      const del = h('button', { className:"btn-icon", style:{color:"#cc4444"}, onClick:() => {
+        const s = JSON.parse(JSON.stringify(state.editSess));
+        const sets = s.session.entries[ei].sets.filter((_,j) => j!==si);
+        s.session.entries[ei].sets = sets.length ? sets : [{weight:"",reps:""}];
+        setState({ editSess: s });
+      }}, "✕");
+      return h('div', { className:"set-row" }, h('span', { className:"set-num" }, String(si+1)), wInp, rInp, del);
+    });
+    const addSetBtn = h('button', { className:"btn-ghost", style:{marginTop:"8px",fontSize:"0.9rem",padding:"10px 16px"}, onClick:() => {
+      const s = JSON.parse(JSON.stringify(state.editSess));
+      s.session.entries[ei].sets.push({weight:"",reps:""});
+      setState({ editSess: s });
+    }}, "+ SET");
+    const removeBtn = h('button', { className:"btn-del", style:{fontSize:"0.78rem",padding:"7px 12px"}, onClick:() => {
+      const s = JSON.parse(JSON.stringify(state.editSess));
+      s.session.entries = s.session.entries.filter((_,i) => i!==ei);
+      setState({ editSess: s });
+    }}, "REMOVE");
+    return h('div', { style:{background:"#f8f8f8",border:"1px solid #ebebeb",borderRadius:"10px",padding:"14px",marginBottom:"10px"} },
+      h('div', { style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px"} },
+        h('span', { style:{fontFamily:"'Bebas Neue',sans-serif",fontSize:"1rem",letterSpacing:"2px"} }, entry.exercise),
+        removeBtn
+      ),
+      ...setRows, addSetBtn
+    );
+  });
+
+  const addExPills = state.data.exercises.filter(ex => !sess.entries.find(e => e.exercise === ex)).map(ex =>
+    h('button', { className:"ex-pill", onClick:() => {
+      const s = JSON.parse(JSON.stringify(state.editSess));
+      s.session.entries.push({ exercise: ex, sets: [{weight:"",reps:""}] });
+      setState({ editSess: s });
+    }}, ex)
+  );
+
+  const dateInp = h('input', { type:"date", value:sess.date,
+    style:{fontFamily:"'DM Mono',monospace",fontSize:"0.82rem",background:"#f5f5f5",border:"1.5px solid #e0e0e0",borderRadius:"8px",padding:"8px 12px",color:"#444"} });
+  dateInp.addEventListener('change', e => {
+    const s = JSON.parse(JSON.stringify(state.editSess));
+    s.session.date = e.target.value;
+    setState({ editSess: s });
+  });
+
+  const modal = h('div', { className:"modal", style:{maxWidth:"520px"}, onClick: e => e.stopPropagation() },
+    h('div', { className:"modal-handle" }),
+    h('div', { style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"} },
+      h('div', { style:{display:"flex",alignItems:"center",gap:"10px"} },
+        h('span', { style:{fontSize:"1.3rem",letterSpacing:"3px"} }, "EDIT"),
+        dateInp
+      ),
+      h('button', { className:"btn-icon", onClick:() => setState({ editSess: null }) }, "✕")
+    ),
+    ...entryCards,
+    h('details', { style:{marginTop:"4px",marginBottom:"16px"} },
+      h('summary', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.78rem",color:"#888",cursor:"pointer",padding:"10px 0",listStyle:"none"} }, "+ Add exercise to session"),
+      h('div', { style:{display:"flex",flexWrap:"wrap",gap:"8px",marginTop:"10px"} }, ...addExPills)
+    ),
+    h('button', { className:"btn-primary", style:{fontSize:"1.1rem",letterSpacing:"3px"}, onClick:() => {
+      const newSessions = state.data.sessions.map((s,i) => i === state.editSess.idx ? state.editSess.session : s);
+      setState({ data: { ...state.data, sessions: newSessions }, editSess: null });
+    }}, "SAVE CHANGES")
+  );
+  return h('div', { className:"overlay", onClick:() => setState({ editSess: null }) }, modal);
+}
+
+// ── Main render ──────────────────────────────────────────────────────────
+function render() {
+  const app = document.getElementById('app');
+  const weekRange = getWeekRange(state.weekOffset);
+  const weeklyVol = calcVolume(state.data.sessions, state.data.exerciseMuscles, s => s.date >= weekRange.start && s.date <= weekRange.end);
+  const prs = state.data.exercises.map(ex => ({ exercise: ex, pr: getPR(state.data.sessions, ex) })).filter(x => x.pr);
+
+  const NAV = [
+    { id:"dashboard", icon:"⚡", label:"Home" },
+    { id:"log",       icon:"✏️",  label:"Log" },
+    { id:"volume",    icon:"📊", label:"Volume" },
+    { id:"history",   icon:"📋", label:"History" },
+    { id:"prs",       icon:"🏆", label:"PRs" },
+  ];
+
+  const installBanner = (state.showInstallBanner && state.installPrompt) ? h('div', { className:"install-banner" },
+    h('span', {}, "Add IronLog to your home screen"),
+    h('div', { style:{display:"flex",gap:"8px"} },
+      h('button', { onClick: async () => {
+        state.installPrompt.prompt();
+        await state.installPrompt.userChoice;
+        setState({ showInstallBanner: false, installPrompt: null });
+      }}, "INSTALL"),
+      h('button', { className:"dismiss", onClick:() => setState({ showInstallBanner: false }) }, "Later")
+    )
+  ) : h('span', {});
+
+  const topBar = h('div', { className:"top-bar" },
+    h('div', { style:{display:"flex",alignItems:"baseline",gap:"2px"} },
+      h('span', { style:{fontSize:"1.7rem",letterSpacing:"4px"} }, "IRON"),
+      h('span', { style:{fontSize:"1.7rem",letterSpacing:"4px",color:"#e05c00"} }, "LOG"),
+      state.session ? h('span', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.62rem",color:"#e05c00",marginLeft:"10px",background:"#fff5f0",border:"1px solid #ffd0b0",padding:"2px 8px",borderRadius:"4px"} }, "LIVE") : h('span', {})
+    )
+  );
+
+  let pageContent;
+  if (state.view === "dashboard") pageContent = renderDashboard(weeklyVol, prs);
+  else if (state.view === "log") pageContent = renderLog(weeklyVol);
+  else if (state.view === "volume") pageContent = renderVolume(weeklyVol);
+  else if (state.view === "history") pageContent = renderHistory();
+  else pageContent = renderPRs(prs);
+
+  const bottomNav = h('div', { className:"bottom-nav" },
+    ...NAV.map(n => {
+      const item = h('button', { className:"nav-item" + (state.view===n.id?" active":""), onClick:() => setState({ view: n.id }) },
+        h('span', { className:"nav-icon" }, n.icon),
+        h('span', { className:"nav-label" }, n.label),
+        ...(state.view===n.id ? [h('span', { className:"nav-dot" })] : [])
+      );
+      return item;
+    })
+  );
+
+  const shell = h('div', { className:"app-shell" },
+    installBanner, topBar,
+    h('div', { className:"page-content" }, pageContent),
+    bottomNav
+  );
+
+  app.innerHTML = '';
+  app.appendChild(shell);
+  app.appendChild(renderMappingModal());
+  app.appendChild(renderEditModal());
+}
+
+render();
+</script>
+</body>
+</html>
