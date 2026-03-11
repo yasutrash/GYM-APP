@@ -102,49 +102,104 @@ document.getElementById('manifest-placeholder').href = manifestURL;
 const STORAGE_KEY = "gym_tracker_data_v1";
 
 const EXERCISE_MUSCLES = {
-  "Bench Press":       { "Chest": 1, "Triceps": 0.5, "Front Delts": 0.5 },
-  "Incline Press":     { "Chest": 1, "Front Delts": 0.75, "Triceps": 0.5 },
-  "Dip":               { "Chest": 1, "Triceps": 0.5, "Front Delts": 0.25 },
-  "Barbell Row":       { "Back": 1, "Rear Delts": 0.5, "Biceps": 0.5 },
-  "Cable Row":         { "Back": 1, "Rear Delts": 0.5, "Biceps": 0.5 },
-  "Pull-Up":           { "Back": 1, "Biceps": 0.5 },
-  "Lat Pulldown":      { "Back": 1, "Biceps": 0.5 },
-  "Squat":             { "Quads": 1, "Glutes": 0.75, "Lower Back": 0.25 },
-  "Leg Press":         { "Quads": 1, "Glutes": 0.5 },
-  "Lunge":             { "Quads": 1, "Glutes": 0.75, "Hamstrings": 0.25 },
-  "Leg Extension":     { "Quads": 1 },
-  "Deadlift":          { "Hamstrings": 0.75, "Glutes": 0.75, "Lower Back": 0.75 },
-  "Romanian Deadlift": { "Hamstrings": 1, "Glutes": 0.75, "Lower Back": 0.5 },
-  "Leg Curl":          { "Hamstrings": 1 },
-  "Overhead Press":    { "Front Delts": 1, "Triceps": 0.5, "Side Delts": 0.25 },
-  "Lateral Raise":     { "Side Delts": 1 },
-  "Face Pull":         { "Rear Delts": 1, "Back": 0.5 },
-  "Curl":              { "Biceps": 1 },
-  "Hammer Curl":       { "Biceps": 0.75, "Forearms": 0.75 },
-  "Tricep Extension":  { "Triceps": 1 },
-  "Skull Crusher":     { "Triceps": 1 },
-  "Calf Raise":        { "Calves": 1 },
-  "Ab Wheel":          { "Abs": 1 },
-  "Crunch":            { "Abs": 1 },
-  "Plank":             { "Abs": 0.75, "Core Stabilizers": 0.25 },
+  // ── Chest ────────────────────────────────────────────────────────────
+  "Bench Press":              { "Chest": 1.0, "Front Delts": 0.5,  "Triceps": 0.5  },
+  "Flat Dumbbell Press":      { "Chest": 1.0, "Front Delts": 0.5,  "Triceps": 0.5  },
+  "Machine Chest Press":      { "Chest": 1.0, "Front Delts": 0.5,  "Triceps": 0.5  },
+  "Incline Press":            { "Chest": 1.0, "Front Delts": 0.75, "Triceps": 0.5  },
+  "Decline Bench Press":      { "Chest": 1.0, "Triceps": 0.5,  "Front Delts": 0.25 },
+  "Dip":                      { "Chest": 1.0, "Triceps": 0.5,  "Front Delts": 0.25 },
+  "Push-Up":                  { "Chest": 1.0, "Triceps": 0.5,  "Front Delts": 0.5, "Core Stabilizers": 0.25 },
+  "Cable Fly":                { "Chest": 1.0, "Front Delts": 0.25 },
+  "Pec Fly Machine":          { "Chest": 1.0, "Front Delts": 0.25 },
+  // ── Back ─────────────────────────────────────────────────────────────
+  "Pull-Up":                  { "Back": 1.0, "Biceps": 0.5,  "Rear Delts": 0.25 },
+  "Lat Pulldown":             { "Back": 1.0, "Biceps": 0.5,  "Rear Delts": 0.25 },
+  "Barbell Row":              { "Back": 1.0, "Rear Delts": 0.5,  "Biceps": 0.5   },
+  "Cable Row":                { "Back": 1.0, "Rear Delts": 0.5,  "Biceps": 0.5   },
+  "Chest Supported Row":      { "Back": 1.0, "Rear Delts": 0.5,  "Biceps": 0.5   },
+  "Single Arm Dumbbell Row":  { "Back": 1.0, "Rear Delts": 0.5,  "Biceps": 0.5,  "Core Stabilizers": 0.25 },
+  "T-Bar Row":                { "Back": 1.0, "Rear Delts": 0.5,  "Biceps": 0.5   },
+  "Straight Arm Pulldown":    { "Back": 1.0 },
+  "Face Pull":                { "Rear Delts": 1.0, "Back": 0.5 },
+  // ── Shoulders ────────────────────────────────────────────────────────
+  "Overhead Press":           { "Front Delts": 1.0, "Triceps": 0.5,  "Side Delts": 0.25 },
+  "Dumbbell Shoulder Press":  { "Front Delts": 1.0, "Triceps": 0.5,  "Side Delts": 0.25 },
+  "Arnold Press":             { "Front Delts": 1.0, "Side Delts": 0.5, "Triceps": 0.5  },
+  "Lateral Raise":            { "Side Delts": 1.0 },
+  "Cable Lateral Raise":      { "Side Delts": 1.0 },
+  "Machine Lateral Raise":    { "Side Delts": 1.0 },
+  "Reverse Fly":              { "Rear Delts": 1.0, "Back": 0.25 },
+  "Rear Delt Row":            { "Rear Delts": 1.0, "Back": 0.5  },
+  "Reverse Pec Deck":         { "Rear Delts": 1.0 },
+  // ── Quads ────────────────────────────────────────────────────────────
+  "Squat":                    { "Quads": 1.0, "Glutes": 0.5,  "Lower Back": 0.25 },
+  "Hack Squat":               { "Quads": 1.0, "Glutes": 0.5  },
+  "Leg Press":                { "Quads": 1.0, "Glutes": 0.5  },
+  "Lunge":                    { "Quads": 1.0, "Glutes": 0.75, "Hamstrings": 0.25 },
+  "Bulgarian Split Squat":    { "Quads": 1.0, "Glutes": 0.5,  "Core Stabilizers": 0.25 },
+  "Step-Up":                  { "Quads": 1.0, "Glutes": 0.5  },
+  "Leg Extension":            { "Quads": 1.0 },
+  // ── Hamstrings ───────────────────────────────────────────────────────
+  "Deadlift":                 { "Glutes": 1.0, "Hamstrings": 0.75, "Lower Back": 0.75 },
+  "Romanian Deadlift":        { "Hamstrings": 1.0, "Glutes": 0.75, "Lower Back": 0.5  },
+  "Leg Curl":                 { "Hamstrings": 1.0 },
+  "Nordic Curl":              { "Hamstrings": 1.0 },
+  "Good Morning":             { "Hamstrings": 1.0, "Glutes": 0.5,  "Lower Back": 0.5  },
+  // ── Glutes ───────────────────────────────────────────────────────────
+  "Hip Thrust":               { "Glutes": 1.0, "Hamstrings": 0.5  },
+  "Glute Bridge":             { "Glutes": 1.0, "Hamstrings": 0.5  },
+  "Cable Kickback":           { "Glutes": 1.0 },
+  // ── Biceps ───────────────────────────────────────────────────────────
+  "Curl":                     { "Biceps": 1.0 },
+  "Hammer Curl":              { "Biceps": 0.75, "Forearms": 0.75 },
+  "Preacher Curl":            { "Biceps": 1.0 },
+  "Incline Dumbbell Curl":    { "Biceps": 1.0 },
+  "Cable Curl":               { "Biceps": 1.0 },
+  // ── Triceps ──────────────────────────────────────────────────────────
+  "Tricep Extension":         { "Triceps": 1.0 },
+  "Skull Crusher":            { "Triceps": 1.0 },
+  "Close Grip Bench Press":   { "Triceps": 1.0, "Chest": 0.5,  "Front Delts": 0.5  },
+  "Cable Pushdown":           { "Triceps": 1.0 },
+  "Overhead Cable Extension": { "Triceps": 1.0 },
+  // ── Forearms ─────────────────────────────────────────────────────────
+  "Reverse Curl":             { "Forearms": 1.0, "Biceps": 0.5  },
+  "Farmer Carry":             { "Forearms": 1.0, "Core Stabilizers": 0.5 },
+  "Wrist Curl":               { "Forearms": 1.0 },
+  // ── Calves ───────────────────────────────────────────────────────────
+  "Calf Raise":               { "Calves": 1.0 },
+  "Seated Calf Raise":        { "Calves": 1.0 },
+  "Single Leg Calf Raise":    { "Calves": 1.0 },
+  // ── Abs ──────────────────────────────────────────────────────────────
+  "Ab Wheel":                 { "Abs": 1.0, "Core Stabilizers": 0.5  },
+  "Crunch":                   { "Abs": 1.0 },
+  "Hanging Leg Raise":        { "Abs": 1.0, "Core Stabilizers": 0.25 },
+  "Cable Crunch":             { "Abs": 1.0 },
+  "Decline Sit-Up":           { "Abs": 1.0 },
+  "Toe-to-Bar":               { "Abs": 1.0 },
+  // ── Core Stabilizers ─────────────────────────────────────────────────
+  "Plank":                    { "Core Stabilizers": 1.0, "Abs": 0.5  },
+  "Dead Bug":                 { "Core Stabilizers": 1.0 },
+  "Pallof Press":             { "Core Stabilizers": 1.0 },
+  "Side Plank":               { "Core Stabilizers": 1.0 },
 };
 
 const MUSCLE_TARGETS = {
   "Chest":            { min: 10, max: 20 },
-  "Back":             { min: 10, max: 20 },
-  "Quads":            { min: 8,  max: 16 },
-  "Hamstrings":       { min: 6,  max: 12 },
-  "Glutes":           { min: 6,  max: 12 },
-  "Front Delts":      { min: 6,  max: 12 },
-  "Side Delts":       { min: 8,  max: 16 },
-  "Rear Delts":       { min: 8,  max: 16 },
+  "Back":             { min: 12, max: 20 },
+  "Quads":            { min: 10, max: 18 },
+  "Hamstrings":       { min: 8,  max: 15 },
+  "Glutes":           { min: 10, max: 20 },
+  "Front Delts":      { min: 4,  max: 10 },
+  "Side Delts":       { min: 12, max: 20 },
+  "Rear Delts":       { min: 10, max: 20 },
   "Biceps":           { min: 8,  max: 14 },
   "Triceps":          { min: 8,  max: 14 },
-  "Forearms":         { min: 4,  max: 10 },
-  "Calves":           { min: 6,  max: 12 },
-  "Abs":              { min: 6,  max: 16 },
-  "Core Stabilizers": { min: 3,  max: 8  },
-  "Lower Back":       { min: 4,  max: 8  },
+  "Forearms":         { min: 6,  max: 12 },
+  "Calves":           { min: 10, max: 16 },
+  "Abs":              { min: 8,  max: 20 },
+  "Core Stabilizers": { min: 6,  max: 10 },
+  "Lower Back":       { min: 4,  max: 10 },
 };
 
 const ALL_MUSCLES = Object.keys(MUSCLE_TARGETS);
@@ -352,7 +407,31 @@ function groupExercises() {
     if (!grouped[g]) grouped[g] = [];
     grouped[g].push(ex);
   }
-  const groups = [...ALL_MUSCLES.filter(m => grouped[m]), ...(grouped["Other"] ? ["Other"] : [])];
+
+  // Score each muscle group by urgency: how far below min target (as % of range)
+  // Higher score = needs more work = sorts to top
+  function muscleUrgency(muscle) {
+    const target = MUSCLE_TARGETS[muscle];
+    if (!target) return 0;
+    const vol = (state.weekOffset === 0 && state.session)
+      ? (() => {
+          // Include in-progress session sets in urgency calc
+          const weekRange = getWeekRange(0);
+          const savedVol = calcVolume(state.data.sessions, state.data.exerciseMuscles, s => s.date >= weekRange.start && s.date <= weekRange.end);
+          const liveVol = calcVolume([state.session], state.data.exerciseMuscles);
+          return (savedVol[muscle] || 0) + (liveVol[muscle] || 0);
+        })()
+      : (state._weeklyVol ? state._weeklyVol[muscle] || 0 : 0);
+    const { min, max } = target;
+    if (vol >= max) return -1;           // over max = push to bottom
+    if (vol >= min) return (min - vol);  // in range = slightly negative, order by how close to min
+    return (min - vol) / min * 100;      // below min = most urgent, higher = more urgent
+  }
+
+  const groups = [
+    ...ALL_MUSCLES.filter(m => grouped[m]).sort((a, b) => muscleUrgency(b) - muscleUrgency(a)),
+    ...(grouped["Other"] ? ["Other"] : [])
+  ];
   return { grouped, groups };
 }
 
@@ -830,6 +909,7 @@ function render() {
   const app = document.getElementById('app');
   const weekRange = getWeekRange(state.weekOffset);
   const weeklyVol = calcVolume(state.data.sessions, state.data.exerciseMuscles, s => s.date >= weekRange.start && s.date <= weekRange.end);
+  state._weeklyVol = weeklyVol; // make available to groupExercises for urgency sorting
   const prs = state.data.exercises.map(ex => ({ exercise: ex, pr: getPR(state.data.sessions, ex) })).filter(x => x.pr);
 
   const NAV = [
