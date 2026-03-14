@@ -339,6 +339,7 @@ function setState(patch) {
 }
 
 // Update session input values without re-rendering (prevents focus loss)
+let _volumeDebounce = null;
 function silentUpdateSet(ei, si, field, value) {
   if (!state.session) return;
   state.session = { ...state.session,
@@ -346,7 +347,22 @@ function silentUpdateSet(ei, si, field, value) {
       ...en, sets: en.sets.map((st, j) => j !== si ? st : { ...st, [field]: value })
     })
   };
-  saveData(state.data);
+  // Debounce the full re-render so typing stays instant (fires 600ms after last keystroke)
+  clearTimeout(_volumeDebounce);
+  _volumeDebounce = setTimeout(() => {
+    const active = document.activeElement;
+    const activeId = active ? active.dataset.inputId : null;
+    render();
+    if (activeId) {
+      const restored = document.querySelector(`[data-input-id="${activeId}"]`);
+      if (restored) {
+        restored.focus();
+        const v = restored.value;
+        restored.value = '';
+        restored.value = v;
+      }
+    }
+  }, 600);
 }
 
 // ── PWA Install ──────────────────────────────────────────────────────────
@@ -597,9 +613,11 @@ function renderLog(weeklyVol) {
     );
 
     const setRows = entry.sets.map((set, si) => {
-      const wInp = h('input', { className:"num-input", type:"number", inputmode:"decimal", placeholder:"0", value:set.weight });
+      const wId = `w-${ei}-${si}`;
+      const rId = `r-${ei}-${si}`;
+      const wInp = h('input', { className:"num-input", type:"number", inputmode:"decimal", placeholder:"0", value:set.weight, 'data-input-id': wId });
       wInp.addEventListener('input', e => silentUpdateSet(ei, si, 'weight', e.target.value));
-      const rInp = h('input', { className:"num-input", type:"number", inputmode:"numeric", placeholder:"0", value:set.reps });
+      const rInp = h('input', { className:"num-input", type:"number", inputmode:"numeric", placeholder:"0", value:set.reps, 'data-input-id': rId });
       rInp.addEventListener('input', e => silentUpdateSet(ei, si, 'reps', e.target.value));
       const del = h('button', { className:"btn-icon", style:{color:"#cc4444"}, onClick:() => {
         const s = { ...state.session };
@@ -908,7 +926,10 @@ function renderEditModal() {
 function render() {
   const app = document.getElementById('app');
   const weekRange = getWeekRange(state.weekOffset);
-  const weeklyVol = calcVolume(state.data.sessions, state.data.exerciseMuscles, s => s.date >= weekRange.start && s.date <= weekRange.end);
+  const sessionsToCount = (state.session && state.weekOffset === 0)
+    ? [...state.data.sessions, state.session]
+    : state.data.sessions;
+  const weeklyVol = calcVolume(sessionsToCount, state.data.exerciseMuscles, s => s.date >= weekRange.start && s.date <= weekRange.end);
   state._weeklyVol = weeklyVol; // make available to groupExercises for urgency sorting
   const prs = state.data.exercises.map(ex => ({ exercise: ex, pr: getPR(state.data.sessions, ex) })).filter(x => x.pr);
 
