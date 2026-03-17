@@ -7,9 +7,9 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Yasutrash Gym App">
+  <meta name="apple-mobile-web-app-title" content="YasuFit">
   <meta name="description" content="Track your gym sessions, volume and PRs">
-  <title>Yasutrash Gym App</title>
+  <title>YasuFit</title>
   <link rel="manifest" id="manifest-placeholder">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -80,8 +80,8 @@
 <script>
 // ── PWA Manifest (injected inline as blob URL) ──────────────────────────
 const manifestData = {
-  name: "Yasutrash Gym App",
-  short_name: "Yasutrash Gym App",
+  name: "YasuFit",
+  short_name: "YasuFit",
   description: "Gym session tracker with volume analysis",
   start_url: "./",
   display: "standalone",
@@ -315,12 +315,17 @@ function loadData() {
   }
 }
 function saveData(d) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch(e) {} }
+const SESSION_DRAFT_KEY = "yasufit_session_draft";
+function saveDraft(session) { try { localStorage.setItem(SESSION_DRAFT_KEY, JSON.stringify(session)); } catch(e) {} }
+function clearDraft() { try { localStorage.removeItem(SESSION_DRAFT_KEY); } catch(e) {} }
+function loadDraft() { try { const r = localStorage.getItem(SESSION_DRAFT_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; } }
 
 // ── App State ────────────────────────────────────────────────────────────
+const _savedDraft = loadDraft();
 let state = {
   data: loadData(),
   view: "dashboard",
-  session: null,
+  session: _savedDraft || null,
   selEx: null,
   newExName: "",
   showAddEx: false,
@@ -330,11 +335,17 @@ let state = {
   editSess: null,
   installPrompt: null,
   showInstallBanner: false,
+  showDraftBanner: !!_savedDraft,
 };
 
 function setState(patch) {
   state = { ...state, ...patch };
   if (patch.data !== undefined) saveData(state.data);
+  // Auto-save or clear session draft
+  if (patch.session !== undefined) {
+    if (patch.session) saveDraft(patch.session);
+    else clearDraft();
+  }
   render();
 }
 
@@ -348,6 +359,7 @@ function silentUpdateSet(ei, si, field, value) {
     })
   };
   // Debounce the full re-render so typing stays instant (fires 600ms after last keystroke)
+  if (state.session) saveDraft(state.session);
   clearTimeout(_volumeDebounce);
   _volumeDebounce = setTimeout(() => {
     const active = document.activeElement;
@@ -639,11 +651,23 @@ function renderLog(weeklyVol) {
   const finishBtn = h('button', { className:"btn-primary", style:{width:"auto",padding:"12px 20px",fontSize:"1rem"}, disabled: !state.session.entries.length,
     onClick:() => {
       const newData = { ...state.data, sessions: [...state.data.sessions, state.session] };
-      setState({ data: newData, session: null, view: "dashboard" });
+      clearDraft();
+      setState({ data: newData, session: null, view: "dashboard", showDraftBanner: false });
     }
   }, "FINISH");
 
   return h('div', {},
+    // Draft recovery banner
+    state.showDraftBanner ? h('div', { style:{background:"#fffbe6",border:"1px solid #f0c040",borderRadius:"10px",padding:"12px 14px",marginBottom:"16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:"12px"} },
+      h('div', {},
+        h('div', { style:{fontFamily:"'Bebas Neue',sans-serif",fontSize:"1rem",letterSpacing:"2px",color:"#7a5000"} }, "⚡ SESSION RESTORED"),
+        h('div', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.68rem",color:"#a07020",marginTop:"2px"} }, "Your last session was recovered")
+      ),
+      h('button', { className:"btn-del", style:{whiteSpace:"nowrap",fontSize:"0.75rem",padding:"7px 12px"}, onClick:() => {
+        clearDraft();
+        setState({ session: null, showDraftBanner: false });
+      }}, "DISCARD")
+    ) : h('span', {}),
     h('div', { style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"} },
       h('div', {},
         h('span', { style:{fontSize:"1.4rem",letterSpacing:"3px"} }, "SESSION"),
@@ -942,7 +966,7 @@ function render() {
   ];
 
   const installBanner = (state.showInstallBanner && state.installPrompt) ? h('div', { className:"install-banner" },
-    h('span', {}, "Add Yasutrash Gym App to your home screen"),
+    h('span', {}, "Add YasuFit to your home screen"),
     h('div', { style:{display:"flex",gap:"8px"} },
       h('button', { onClick: async () => {
         state.installPrompt.prompt();
@@ -955,8 +979,8 @@ function render() {
 
   const topBar = h('div', { className:"top-bar" },
     h('div', { style:{display:"flex",alignItems:"baseline",gap:"2px"} },
-      h('span', { style:{fontSize:"1.7rem",letterSpacing:"4px"} }, "YASUTRASH"),
-      h('span', { style:{fontSize:"1.7rem",letterSpacing:"4px",color:"#1a8a3a"} }, " GYM APP"),
+      h('span', { style:{fontSize:"1.7rem",letterSpacing:"4px"} }, "YASU"),
+      h('span', { style:{fontSize:"1.7rem",letterSpacing:"4px",color:"#1a8a3a"} }, "FIT"),
       state.session ? h('span', { style:{fontFamily:"'DM Mono',monospace",fontSize:"0.62rem",color:"#1a8a3a",marginLeft:"10px",background:"#f0faf3",border:"1px solid #a8d5b5",padding:"2px 8px",borderRadius:"4px"} }, "LIVE") : h('span', {})
     )
   );
